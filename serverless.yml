@@ -1,0 +1,105 @@
+service: pulpo-challenge
+app: pulpo-challenge
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  project: ${self:app}
+  memorySize: 1024
+  timeout: 30
+  stage: ${opt:stage,'dev'}
+  stackName: ${opt:stage,'dev'}-${self:app}
+  deploymentBucket:
+    name: ${opt:stage,'dev'}-pulpo-challenge-test
+    serverSideEncryption: AES256
+  deploymentPrefix: ${self:app}
+  tracing:
+    lambda: true
+  environment:
+    NODE_PATH: ./:/opt/node_modules
+    ENVIRONMENT: ${env:ENVIRONMENT}
+    PARSE_URL: ${env:PARSE_URL}
+    APP_ID: ${env:APP_ID}
+    JAVASCRIPT_KEY: ${env:JAVASCRIPT_KEY}
+    MASTER_KEY: ${env:MASTER_KEY}
+    IATI_URL: ${env:IATI_URL}
+
+package:
+  patterns:
+    - "!./**"
+  individually: true
+  excludeDevDependencies: true
+
+layers:
+  nodeModules:
+    path: ./
+    package:
+      patterns:
+        - node_modules/**
+    name: ${self:service}-nodeModules-${self:provider.stage}
+    description: API Dependencies
+
+plugins:
+  - serverless-offline
+  - serverless-deployment-bucket
+  - serverless-s3-remover
+  - serverless-dotenv-plugin
+  - "@conqa/serverless-openapi-documentation"
+  - serverless-prune-plugin
+
+custom:
+  region: us-east-1
+  stage-default: "dev"
+
+  remover:
+    buckets:
+      - ${opt:stage,'dev'}-api-os-prediagnostics
+
+  package:
+    exclude:
+      - .gitignore
+      - .git/**
+    individually: true
+    excludeDevDependencies: true
+
+  documentation: ${file(serverless.docs.yml):documentation}
+  dotenv:
+    include:
+      - ENVIRONMENT
+      - PARSE_URL
+      - APP_ID
+      - JAVASCRIPT_KEY
+      - MASTER_KEY
+      - IATI_URL
+
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
+
+functions:
+  getContributions:
+    name: ${opt:stage,'dev'}-${self:app}-get-contributions
+    handler: src/handlers/contributions.getContributionsHandler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
+    package:
+      patterns:
+        - src/**
+      individually: true
+    events:
+      - http:
+          path: contributions
+          method: get
+          parameters:
+            paths:
+              countryCode: true
+          cors: true
+          documentation: ${file(serverless.docs.yml):endpoints.getContributions}
+          integration: lambda-proxy
+          response:
+            headers:
+              Access-Control-Allow-Headers: "*"
+              Access-Control-Allow-Origin: "*"
+              Access-Control-Allow-Credentials: false
