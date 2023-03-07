@@ -10,6 +10,11 @@ Se agregó un archivo de configuración para que se realice el deploy por medio 
 
 El endpoint está hosteado en aws y se usó serverless y layers
 
+Descripción: El endpoint puede recibir como parámetro “countryCode” de algún país que se quiera consultar sus aportaciones, si no se envía ninguno se buscará por default “SD” correspondiente a Sudán.
+
+Para los años anteriores al año actual, la primera vez que se consulta la información, la información de las contribuciones se obtiene del API de “IATI” y se guarda en una BD ya que esta información no será modificada y es más rápida la consulta ya que no se tiene que volver a buscar y ordenar los datos.
+
+
 
 
 ## Documentation Swagger
