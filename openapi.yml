@@ -1,0 +1,70 @@
+openapi: 3.0.0
+components:
+  schemas:
+    SuccessResponse:
+      type: string
+      description: Simple message reflecting success
+    ErrorNotFound:
+      type: string
+      description: Simple message reflecting error not found
+    ContributionObject:
+      type: object
+      description: Contributions made per year
+      properties:
+        '2022':
+          type: array
+          items:
+            properties:
+              titleNarrative:
+                type: string
+                example: OTI Sudan Program
+              transactionValueUsdSum:
+                type: number
+                example: 9103918
+        '2023':
+          type: array
+          items:
+            properties:
+              titleNarrative:
+                type: string
+                example: Rapid Response Fund
+              transactionValueUsdSum:
+                type: number
+                example: 96799996
+info:
+  title: Demo Serverless Documentation
+  description: Demo Serverless Lambda functions template API Swagger Documentation
+  version: v1
+paths:
+  /contributions:
+    get:
+      operationId: getContributions
+      summary: Get the information of the contributions
+      description: Object with the information of the contributions made to a country
+      tags:
+        - contributions
+      parameters:
+        - name: countryCode
+          in: path
+          description: Country code to search info
+          required: true
+          schema:
+            type: string
+            pattern: '^[-a-zA-Z0-9_]+$'
+            example: SD
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionObject'
+        '404':
+          description: Not Found Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+servers:
+  - url: 'https://95g32tb6t5.execute-api.us-east-1.amazonaws.com/dev/'
+    description: Development server
