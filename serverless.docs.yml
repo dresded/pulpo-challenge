@@ -1,0 +1,74 @@
+documentation:
+  version: 'v1'
+  title: "Demo Serverless Documentation"
+  description: "Demo Serverless Lambda functions template API Swagger Documentation"
+  schemes:
+    - https
+  servers:
+    - url: https://95g32tb6t5.execute-api.us-east-1.amazonaws.com/dev/
+      description: Development server
+  models:
+    - name: "SuccessResponse"
+      description: "Successful Response"
+      contentType: "application/json"
+      schema:
+        type: string
+        description: Simple message reflecting success
+    - name: "ErrorNotFound"
+      description: "Custom Not Found Error"
+      contentType: "application/json"
+      schema:
+        type: string
+        description: "Simple message reflecting error not found"
+    - name: ContributionObject
+      contentType: application/json
+      schema:
+        type: object
+        description: Contributions made per year
+        properties:
+          2023:
+            type: array
+            items:
+              properties:
+                titleNarrative:
+                  type: string
+                  example: Rapid Response Fund
+                transactionValueUsdSum:
+                  type: number
+                  example: 96799996
+          2022:
+            type: array
+            items:
+              properties:
+                titleNarrative:
+                  type: string
+                  example: OTI Sudan Program
+                transactionValueUsdSum:
+                  type: number
+                  example: 9103918
+
+endpoints:
+  getContributions:
+    summary: "Get the information of the contributions"
+    description: "Object with the information of the contributions made to a country"
+    tags:
+      - "contributions"
+    method: get
+    pathParams:
+      - name: "countryCode"
+        description: "Country code to search info"
+        schema:
+          type: string
+          pattern: "^[-a-zA-Z0-9_]+$"
+          example: SD
+    methodResponses:
+      - statusCode: "200"
+        responseBody:
+          description: "Successful Response"
+        responseModels:
+          "application/json": "ContributionObject"
+      - statusCode: "404"
+        responseBody:
+          description: "Not Found Response"
+        responseModels:
+          "application/json": "ErrorNotFound"

@@ -1,0 +1,50 @@
+name: Deploy to development on merge dev branch
+'on':
+  push:
+    branches:
+  # add all stage branches
+      - dev
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: 'dev'
+      PARSE_URL: "${{ secrets.PARSE_URL }}"
+      APP_ID: "${{ secrets.APP_ID }}"
+      JAVASCRIPT_KEY: "${{ secrets.JAVASCRIPT_KEY }}"
+      MASTER_KEY: "${{ secrets.MASTER_KEY }}"
+      IATI_URL: "${{ secrets.IATI_URL }}"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '16.x'
+    - name: Creating env file
+      run: | 
+        cat > .env << EOF
+        ENVIRONMENT='${{ env.ENVIRONMENT }}'
+        PARSE_URL='${{ env.PARSE_URL }}'
+        APP_ID='${{ env.APP_ID }}'
+        JAVASCRIPT_KEY='${{ env.JAVASCRIPT_KEY }}'
+        MASTER_KEY='${{ env.MASTER_KEY }}'
+        IATI_URL='${{ env.IATI_URL }}'
+        EOF
+    - name: Install Serverless Framework
+      run: npm install -g serverless@2.21.0
+    - name: Install NPM dependencies
+      run: npm install
+    # - name: Install newman
+    #   run: npm install -g newman
+    # - name: Run Unit Tests
+    #   run: yarn test
+    - name: Run sls-offline
+      run: yarn dev &
+    # - name: Run Integration Tests
+    #   run: newman run ./integrations/ServerlessTemplate.postman_collection.json -e ./integrations/dev.postman_environment.json
+    - name: Deploy Lambda functions
+      uses: serverless/github-action@master
+      with:
+        args: 'deploy --stage dev'
+      env:
+       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
